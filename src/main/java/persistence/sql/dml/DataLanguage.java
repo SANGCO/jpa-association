@@ -11,6 +11,8 @@ public enum DataLanguage {
     UPDATE("UPDATE"),
     SET("SET"),
     FROM("FROM"),
+    JOIN("JOIN"),
+    ON("ON"),
     WHERE("WHERE"),
     LEFT_PARENTHESIS("("),
     RIGHT_PARENTHESIS(")"),

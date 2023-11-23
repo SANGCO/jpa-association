@@ -1,14 +1,19 @@
 package persistence.sql.ddl;
 
+import domain.Order;
+import domain.OrderItem;
+import domain.Person;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import persistence.Fixtures;
-import persistence.entity.Person;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class EntityMetadataTest {
 
@@ -44,6 +49,44 @@ class EntityMetadataTest {
             entityMetadata.setIdToEntity(entityAnnotation, 1L);
         }).isInstanceOf(RuntimeException.class)
                 .hasMessage("Entity 객체에 ID 값을 세팅 중 오류 발생");
+    }
+
+    @Test
+    @DisplayName("haveJoinTables() 메서드 테스트")
+    public void haveJoinTables() {
+        EntityMetadata entityMetadata = new EntityMetadata(Person.class);
+        EntityMetadata joinEntityMetadata = new EntityMetadata(Order.class);
+
+        assertAll(
+                () -> assertThat(entityMetadata.haveJoinTables()).isFalse(),
+                () -> assertThat(joinEntityMetadata.haveJoinTables()).isTrue()
+        );
+    }
+
+    @Test
+    @DisplayName("getJoinTables() 메서드 테스트")
+    public void getJoinTables() {
+        EntityMetadata joinEntityMetadata = new EntityMetadata(Order.class);
+
+        List<EntityMetadata> joinTables = joinEntityMetadata.getJoinTables();
+        Class<?> joinTable = joinTables.stream()
+                .map(entityMetadata -> entityMetadata.type)
+                .filter(type -> type.equals(OrderItem.class))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No join table"));
+
+        assertThat(joinTable).isEqualTo(OrderItem.class);
+    }
+
+    @Test
+    @DisplayName("getJoinColumnName() 메서드 테스트")
+    public void getJoinColumnName() {
+        EntityMetadata entityMetadata = new EntityMetadata(Order.class);
+        EntityMetadata joinEntityMetadata = new EntityMetadata(OrderItem.class);
+
+        String joinColumnName = joinEntityMetadata.getJoinColumnName(entityMetadata);
+
+        assertThat(joinColumnName).isEqualTo("order_items.order_id");
     }
 
     private class NoEntityAnnotation {

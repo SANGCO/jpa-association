@@ -2,12 +2,16 @@ package persistence.sql.ddl;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import persistence.sql.ddl.dialect.Dialect;
 import utils.CustomStringBuilder;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import static utils.JdbcTypeMapper.getJdbcTypeForClass;
 
@@ -58,7 +62,7 @@ public class FieldMetadataExtractor {
             return column.name();
         }
 
-        return field.getName();
+        return transformColumnName(field.getName());
     }
 
     public boolean isId() {
@@ -124,8 +128,40 @@ public class FieldMetadataExtractor {
     private Object extractValue(Object entity) throws NoSuchFieldException, IllegalAccessException {
         Field entityFiled = entity.getClass().getDeclaredField(field.getName());
         entityFiled.setAccessible(true);
-        Object entityValue = entityFiled.get(entity);
-        return entityValue;
+        return entityFiled.get(entity);
+    }
+
+    public boolean hasJoinAnnotation() {
+        return Arrays.stream(field.getAnnotations())
+                .anyMatch(annotation -> annotation.annotationType().getSimpleName().equals("OneToMany"));
+    }
+
+    public boolean hasJoinColumnAnnotation() {
+        return Arrays.stream(field.getAnnotations())
+                .anyMatch(annotation -> annotation.annotationType().getSimpleName().equals("JoinColumn"));
+    }
+
+    public Class<?> getJoinTable() {
+        Type genericType = field.getGenericType();
+
+        if (genericType instanceof ParameterizedType parameterizedType) {
+            return (Class<?>) parameterizedType.getActualTypeArguments()[0];
+        }
+
+        return (Class<?>) field.getGenericType();
+    }
+
+    public String getJoinColumnName() {
+        if (field.isAnnotationPresent(JoinColumn.class)) {
+            JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+            return joinColumn.name();
+        }
+
+        return field.getName();
+    }
+
+    private String transformColumnName(String originalName) {
+        return originalName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
     }
 
 }

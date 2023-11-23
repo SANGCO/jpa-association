@@ -6,12 +6,14 @@ import persistence.sql.ddl.dialect.Dialect;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class EntityMetadata {
 
     private final TableMetadataExtractor tableMetaDataExtractor;
     private final FieldMetadataExtractors fieldMetadataExtractors;
-    private final Class<?> type;
+    final Class<?> type;
 
     public EntityMetadata(Class<?> type) {
         if (!type.isAnnotationPresent(Entity.class)) {
@@ -40,7 +42,7 @@ public class EntityMetadata {
     }
 
     public String getColumnNames() {
-        return fieldMetadataExtractors.getColumnNames();
+        return fieldMetadataExtractors.getColumnNames(getTableName());
     }
 
     public String getValueFrom(Object entity) {
@@ -48,7 +50,7 @@ public class EntityMetadata {
     }
 
     public String getIdColumnName() {
-        return fieldMetadataExtractors.getIdColumnName();
+        return fieldMetadataExtractors.getIdColumnName(getTableName());
     }
 
     public String getIdColumnValue(Object entity) {
@@ -80,11 +82,29 @@ public class EntityMetadata {
     }
 
     public String getUpdateClause(Object entity, Object snapshot) {
-     return fieldMetadataExtractors.getUpdateClause(entity, snapshot);
+        return fieldMetadataExtractors.getUpdateClause(entity, snapshot);
     }
 
     public boolean hasDifferentValue(Object entity, Object snapshot) {
         return fieldMetadataExtractors.hasDifferentValue(entity, snapshot);
+    }
+
+    public boolean haveJoinTables() {
+        return fieldMetadataExtractors.haveJoinAnnotations();
+    }
+
+    public List<EntityMetadata> getJoinTables() {
+        return fieldMetadataExtractors.getJoinTables().stream()
+                .map(EntityMetadata::of)
+                .collect(Collectors.toList());
+    }
+
+    public String getJoinColumnName(EntityMetadata entityMetadata) {
+        return entityMetadata.getJoinColumnName(type, getTableName());
+    }
+
+    private String getJoinColumnName(Class<?> joinTableType, String tableAlias) {
+        return fieldMetadataExtractors.getJoinColumnName(type, joinTableType, tableAlias);
     }
 
 }

@@ -1,5 +1,6 @@
 package persistence.sql.ddl;
 
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import persistence.sql.ddl.dialect.Dialect;
 
@@ -23,15 +24,17 @@ public class FieldMetadataExtractors {
 
     public String getDefinition(Dialect dialect) {
         return fieldMetadataExtractorList.stream()
+                .filter(fieldMetadataExtractor -> !fieldMetadataExtractor.hasJoinAnnotation())
                 .map(fieldMetadataExtractor -> fieldMetadataExtractor.getDefinition(dialect))
                 .collect(Collectors.joining(","));
     }
 
     public String getColumnNames(Object entity) {
         return fieldMetadataExtractorList.stream()
-                .map(FieldMetadataExtractor -> {
+                .filter(fieldMetadataExtractor -> !fieldMetadataExtractor.hasJoinAnnotation())
+                .map(fieldMetadataExtractor -> {
                     try {
-                        return FieldMetadataExtractor.getColumnName(entity);
+                        return fieldMetadataExtractor.getColumnName(entity);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
                         e.printStackTrace();
                     }
@@ -41,14 +44,18 @@ public class FieldMetadataExtractors {
                 .collect(Collectors.joining(", "));
     }
 
-    public String getColumnNames() {
+    public String getColumnNames(String tableAlias) {
         return fieldMetadataExtractorList.stream()
-                .map(FieldMetadataExtractor::getColumnName)
+                .filter(fieldMetadataExtractor -> !fieldMetadataExtractor.hasJoinAnnotation())
+                .map(fieldMetadataExtractor -> {
+                    return tableAlias + "." + fieldMetadataExtractor.getColumnName();
+                })
                 .collect(Collectors.joining(", "));
     }
 
     public String getValueFrom(Object entity) {
         return fieldMetadataExtractorList.stream()
+                .filter(fieldMetadataExtractor -> !fieldMetadataExtractor.hasJoinAnnotation())
                 .map(fieldMetadataExtractor -> {
                     try {
                         return fieldMetadataExtractor.getValueFrom(entity);
@@ -65,6 +72,16 @@ public class FieldMetadataExtractors {
         return fieldMetadataExtractorList.stream()
                 .filter(FieldMetadataExtractor::isId)
                 .map(FieldMetadataExtractor::getColumnName)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No @Id annotation"));
+    }
+
+    public String getIdColumnName(String tableAlias) {
+        return fieldMetadataExtractorList.stream()
+                .filter(FieldMetadataExtractor::isId)
+                .map(fieldMetadataExtractor -> {
+                    return tableAlias + "." + fieldMetadataExtractor.getColumnName();
+                })
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No @Id annotation"));
     }
@@ -107,4 +124,30 @@ public class FieldMetadataExtractors {
                     return fieldMetadataExtractor.hasDifferentValue(entity, snapshot);
                 });
     }
+
+    public boolean haveJoinAnnotations() {
+        return fieldMetadataExtractorList.stream()
+                .anyMatch(FieldMetadataExtractor::hasJoinAnnotation);
+    }
+
+    public List<Class<?>> getJoinTables() {
+        return fieldMetadataExtractorList.stream()
+                .filter(FieldMetadataExtractor::hasJoinAnnotation)
+                .map(FieldMetadataExtractor::getJoinTable)
+                .collect(Collectors.toList());
+    }
+
+    public String getJoinColumnName(Class<?> type, Class<?> joinTableType, String tableAlias) {
+        return Arrays.stream(type.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(OneToMany.class))
+                .map(FieldMetadataExtractor::new)
+                .filter(FieldMetadataExtractor::hasJoinColumnAnnotation)
+                .filter(fieldMetadataExtractor -> fieldMetadataExtractor.getJoinTable().equals(joinTableType))
+                .map(fieldMetadataExtractor -> {
+                    return tableAlias + "." + fieldMetadataExtractor.getJoinColumnName();
+                })
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No join column name"));
+    }
+
 }

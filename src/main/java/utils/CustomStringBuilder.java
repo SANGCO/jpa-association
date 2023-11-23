@@ -94,6 +94,21 @@ public class CustomStringBuilder {
                 .toStringWithoutSpace();
     }
 
+    public static String toJoinClause(
+            String joinTableName,
+            String columnNames,
+            String joinColumnName
+    ) {
+        return new CustomStringBuilder()
+                .append(JOIN.getName())
+                .append(joinTableName)
+                .append(ON.getName())
+                .append(columnNames)
+                .append(EQUALS.getName())
+                .append(joinColumnName)
+                .toStringWithoutSpace();
+    }
+
     public static String toFindByIdStatement(String tableName, String columnNames, String idColumnName, String id) {
         return new CustomStringBuilder()
                 .append(SELECT.getName())
