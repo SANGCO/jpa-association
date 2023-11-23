@@ -1,5 +1,6 @@
 package persistence.entity;
 
+import domain.Person;
 import jdbc.JdbcTemplate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

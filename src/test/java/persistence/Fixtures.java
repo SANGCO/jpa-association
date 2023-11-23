@@ -1,6 +1,6 @@
 package persistence;
 
-import persistence.entity.Person;
+import domain.Person;
 
 public class Fixtures {
 

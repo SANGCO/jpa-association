@@ -1,6 +1,7 @@
 package persistence.entity;
 
 
+import domain.Person;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import persistence.DatabaseTestBase;

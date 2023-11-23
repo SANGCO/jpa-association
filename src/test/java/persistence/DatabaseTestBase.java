@@ -2,6 +2,7 @@ package persistence;
 
 import database.DatabaseServer;
 import database.H2;
+import domain.Person;
 import jdbc.JdbcTemplate;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
