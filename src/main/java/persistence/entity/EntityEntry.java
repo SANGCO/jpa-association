@@ -15,4 +15,5 @@ public class EntityEntry {
     public Status getStatus() {
         return status;
     }
+
 }

@@ -8,7 +8,7 @@ import persistence.sql.ddl.dialect.H2Dialect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class FieldMetadataExtractorsTestExtractor {
+class FieldMetadataExtractorsTest {
 
     @Test
     @DisplayName("Person 엔터티 컬럼 정보 가져오기")

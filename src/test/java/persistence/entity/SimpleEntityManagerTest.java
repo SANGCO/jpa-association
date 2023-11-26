@@ -1,10 +1,17 @@
 package persistence.entity;
 
+import domain.Order;
+import domain.OrderItem;
 import domain.Person;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import persistence.DatabaseTestBase;
 import persistence.Fixtures;
+import persistence.sql.ddl.EntityDefinitionBuilder;
+import persistence.sql.ddl.EntityMetadata;
+import persistence.sql.ddl.dialect.Dialect;
+import persistence.sql.ddl.dialect.H2Dialect;
+import persistence.sql.dml.EntityManipulationBuilder;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -22,6 +29,39 @@ class SimpleEntityManagerTest extends DatabaseTestBase {
         Person person = entityManager.find(Person.class, 1L);
 
         assertThat(person.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("find() 메서드 조인 테스트")
+    void findJoin() {
+        Dialect dialect = new H2Dialect();
+        EntityMetadata orderMetadata = EntityMetadata.of(Order.class);
+        EntityDefinitionBuilder orderBuilder = new EntityDefinitionBuilder(orderMetadata);
+        jdbcTemplate.execute(orderBuilder.create(dialect));
+        jdbcTemplate.execute(new EntityManipulationBuilder()
+                .insert(Fixtures.order1(), orderMetadata)
+        );
+
+        EntityMetadata orderItemMetadata = EntityMetadata.of(OrderItem.class);
+        EntityDefinitionBuilder orderItemBuilder = new EntityDefinitionBuilder(orderItemMetadata);
+        jdbcTemplate.execute("CREATE TABLE order_items (" +
+                "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
+                "order_id BIGINT," +
+                "product VARCHAR," +
+                "quantity INT);");
+        jdbcTemplate.execute("INSERT INTO order_items (order_id, product, quantity) VALUES (1, 'testProduct1', 1)");
+        jdbcTemplate.execute("INSERT INTO order_items (order_id, product, quantity) VALUES (1, 'testProduct2', 2)");
+
+        Order order = entityManager.find(Order.class, 1L);
+        // TODO order 객체에 addOrderItem() 메서드로 oderItem 객체 추가 -> order 저장 -> orderItem 인서트문
+
+        assertAll(
+                () -> assertThat(order.getId()).isEqualTo(1L),
+                () -> assertThat(order.getOrderItems().size()).isEqualTo(2)
+        );
+
+        jdbcTemplate.execute(orderBuilder.drop());
+        jdbcTemplate.execute(orderItemBuilder.drop());
     }
 
     @Test

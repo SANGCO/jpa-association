@@ -64,7 +64,7 @@ class EntityManipulationBuilderTest {
     }
 
     @Test
-    @DisplayName("Order 엔터티 join 쿼리 만들기")
+    @DisplayName("Order 엔터티 findAll join 쿼리 만들기")
     public void joinQueryTest() {
         String query = new EntityManipulationBuilder().findAll(EntityMetadata.of(Order.class));
 
@@ -73,7 +73,22 @@ class EntityManipulationBuilderTest {
                     "orders.id, orders.order_number, " +
                     "order_items.id, order_items.product, order_items.quantity, order_items.order_id " +
                 "FROM orders " +
-                "JOIN order_items ON orders.id = order_items.order_id");
+                "JOIN order_items ON orders.id = order_items.order_id;");
+    }
+
+    @Test
+    @DisplayName("Order 엔터티 findById join 쿼리 만들기")
+    public void findByIdJoinQueryTest() {
+        String query = new EntityManipulationBuilder().findById(1L, EntityMetadata.of(Order.class));
+
+        assertThat(query).isEqualTo(
+        "SELECT " +
+                    "orders.id, orders.order_number, " +
+                    "order_items.id, order_items.product, order_items.quantity, order_items.order_id " +
+                "FROM orders " +
+                "JOIN order_items ON orders.id = order_items.order_id " +
+                "WHERE orders.id = 1;"
+        );
     }
 
 }

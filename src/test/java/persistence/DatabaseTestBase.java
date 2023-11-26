@@ -42,19 +42,18 @@ public abstract class DatabaseTestBase {
 
     @BeforeEach
     void beforeEach() {
-        EntityMetadata entityMetadata = EntityMetadata.of(Person.class);
-        entityDefinitionBuilder = new EntityDefinitionBuilder(entityMetadata);
-        Dialect dialect = new H2Dialect();
         entityPersister = new EntityPersister(jdbcTemplate);
         entityLoader = new EntityLoader(jdbcTemplate);
         persistenceContext = new SimplePersistenceContext();
         entityManager = new SimpleEntityManager(entityPersister, entityLoader, persistenceContext);
 
+        EntityMetadata entityMetadata = EntityMetadata.of(Person.class);
+        entityDefinitionBuilder = new EntityDefinitionBuilder(entityMetadata);
+        Dialect dialect = new H2Dialect();
         jdbcTemplate.execute(entityDefinitionBuilder.create(dialect));
         jdbcTemplate.execute(new EntityManipulationBuilder()
                 .insert(Fixtures.person1(), entityMetadata)
         );
-
     }
 
     @AfterEach

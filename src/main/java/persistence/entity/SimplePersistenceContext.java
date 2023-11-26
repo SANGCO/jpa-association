@@ -61,4 +61,5 @@ public class SimplePersistenceContext implements PersistenceContext {
     public Status getEntityStatus(Object entity) {
         return entityEntries.getStatus(entity);
     }
+
 }

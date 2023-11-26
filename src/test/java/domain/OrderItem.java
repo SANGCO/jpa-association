@@ -14,4 +14,12 @@ public class OrderItem {
 
     private Integer quantity;
 
+    public OrderItem() {
+    }
+
+    public OrderItem(String product, Integer quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
 }

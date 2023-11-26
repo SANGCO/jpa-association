@@ -123,6 +123,15 @@ public class CustomStringBuilder {
                 .toStringWithoutSpace();
     }
 
+    public static String toWhereClause(String idColumnName, String id) {
+        return new CustomStringBuilder()
+                .append(WHERE.getName())
+                .append(idColumnName)
+                .append(EQUALS.getName())
+                .appendWithoutSpace(id)
+                .toStringWithoutSpace();
+    }
+
     public static String toCreateStatement(String tableName, String columnNames) {
         return new CustomStringBuilder()
                 .append(CREATE.getName())

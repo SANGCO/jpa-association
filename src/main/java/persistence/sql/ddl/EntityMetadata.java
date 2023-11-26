@@ -1,6 +1,7 @@
 package persistence.sql.ddl;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import persistence.sql.ddl.dialect.Dialect;
 
 import java.lang.reflect.Constructor;
@@ -89,18 +90,26 @@ public class EntityMetadata {
         return fieldMetadataExtractors.hasDifferentValue(entity, snapshot);
     }
 
-    public boolean haveJoinTables() {
-        return fieldMetadataExtractors.haveJoinAnnotations();
+    public boolean hasFetchJoin() {
+        return fieldMetadataExtractors.haveFetchJoinAnnotations();
     }
 
-    public List<EntityMetadata> getJoinTables() {
-        return fieldMetadataExtractors.getJoinTables().stream()
+    public List<EntityMetadata> getJoinTables(FetchType fetchType) {
+        return fieldMetadataExtractors.getJoinTables(fetchType).stream()
                 .map(EntityMetadata::of)
                 .collect(Collectors.toList());
     }
 
     public String getJoinColumnName(EntityMetadata entityMetadata) {
         return entityMetadata.getJoinColumnName(type, getTableName());
+    }
+
+    public void setJoinEntity(Object entity, EntityMetadata fetchJoin, Object joinEntity) {
+        fieldMetadataExtractors.setJoinEntity(entity, fetchJoin.getType(), joinEntity);
+    }
+
+    public Class<?> getType() {
+        return type;
     }
 
     private String getJoinColumnName(Class<?> joinTableType, String tableAlias) {

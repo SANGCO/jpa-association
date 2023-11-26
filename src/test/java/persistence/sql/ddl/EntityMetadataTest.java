@@ -4,6 +4,7 @@ import domain.Order;
 import domain.OrderItem;
 import domain.Person;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,6 @@ class EntityMetadataTest {
     @DisplayName("setIdToEntity() 메서드 테스트")
     public void setIdToEntity() {
         EntityMetadata entityMetadata = new EntityMetadata(Person.class);
-        // TODO 픽스처 하나 만들어서 걷어내자.
         Person person = Fixtures.person1();
 
         entityMetadata.setIdToEntity(person, 1L);
@@ -58,8 +58,8 @@ class EntityMetadataTest {
         EntityMetadata joinEntityMetadata = new EntityMetadata(Order.class);
 
         assertAll(
-                () -> assertThat(entityMetadata.haveJoinTables()).isFalse(),
-                () -> assertThat(joinEntityMetadata.haveJoinTables()).isTrue()
+                () -> assertThat(entityMetadata.hasFetchJoin()).isFalse(),
+                () -> assertThat(joinEntityMetadata.hasFetchJoin()).isTrue()
         );
     }
 
@@ -68,7 +68,7 @@ class EntityMetadataTest {
     public void getJoinTables() {
         EntityMetadata joinEntityMetadata = new EntityMetadata(Order.class);
 
-        List<EntityMetadata> joinTables = joinEntityMetadata.getJoinTables();
+        List<EntityMetadata> joinTables = joinEntityMetadata.getJoinTables(FetchType.EAGER);
         Class<?> joinTable = joinTables.stream()
                 .map(entityMetadata -> entityMetadata.type)
                 .filter(type -> type.equals(OrderItem.class))

@@ -1,5 +1,6 @@
 package persistence.sql.ddl;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import persistence.sql.ddl.dialect.Dialect;
@@ -105,6 +106,10 @@ public class FieldMetadataExtractors {
 
     public <T> void setInstanceValue(T instance, ResultSet resultSet) throws SQLException, IllegalAccessException {
         for (FieldMetadataExtractor fieldMetadataExtractor : fieldMetadataExtractorList) {
+            if (fieldMetadataExtractor.hasJoinAnnotation()) {
+                continue;
+            }
+
             fieldMetadataExtractor.setInstanceValue(instance, resultSet);
         }
     }
@@ -125,14 +130,15 @@ public class FieldMetadataExtractors {
                 });
     }
 
-    public boolean haveJoinAnnotations() {
+    public boolean haveFetchJoinAnnotations() {
         return fieldMetadataExtractorList.stream()
-                .anyMatch(FieldMetadataExtractor::hasJoinAnnotation);
+                .anyMatch(FieldMetadataExtractor::hasFetchJoinAnnotation);
     }
 
-    public List<Class<?>> getJoinTables() {
+    public List<Class<?>> getJoinTables(FetchType fetchType) {
         return fieldMetadataExtractorList.stream()
                 .filter(FieldMetadataExtractor::hasJoinAnnotation)
+                .filter(fieldMetadataExtractor -> fieldMetadataExtractor.isSameFetchType(fetchType))
                 .map(FieldMetadataExtractor::getJoinTable)
                 .collect(Collectors.toList());
     }
@@ -148,6 +154,15 @@ public class FieldMetadataExtractors {
                 })
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No join column name"));
+    }
+
+    public void setJoinEntity(Object entity, Class<?> type, Object joinEntity) {
+        fieldMetadataExtractorList.stream()
+                .filter(FieldMetadataExtractor::hasJoinColumnAnnotation)
+                .filter(fieldMetadataExtractor -> fieldMetadataExtractor.getJoinTable().equals(type))
+                .forEach(fieldMetadataExtractor -> {
+                    fieldMetadataExtractor.setJoinEntity(entity, joinEntity);
+                });
     }
 
 }

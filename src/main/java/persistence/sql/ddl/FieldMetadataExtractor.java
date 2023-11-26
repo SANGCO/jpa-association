@@ -1,8 +1,6 @@
 package persistence.sql.ddl;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.*;
 import persistence.sql.ddl.dialect.Dialect;
 import utils.CustomStringBuilder;
 
@@ -11,7 +9,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static utils.JdbcTypeMapper.getJdbcTypeForClass;
 
@@ -125,15 +125,17 @@ public class FieldMetadataExtractor {
         return false;
     }
 
-    private Object extractValue(Object entity) throws NoSuchFieldException, IllegalAccessException {
-        Field entityFiled = entity.getClass().getDeclaredField(field.getName());
-        entityFiled.setAccessible(true);
-        return entityFiled.get(entity);
-    }
-
     public boolean hasJoinAnnotation() {
         return Arrays.stream(field.getAnnotations())
                 .anyMatch(annotation -> annotation.annotationType().getSimpleName().equals("OneToMany"));
+    }
+
+    public boolean hasFetchJoinAnnotation() {
+        if (hasJoinAnnotation()) {
+            return field.getAnnotation(OneToMany.class).fetch().equals(FetchType.EAGER);
+        }
+
+        return false;
     }
 
     public boolean hasJoinColumnAnnotation() {
@@ -158,6 +160,43 @@ public class FieldMetadataExtractor {
         }
 
         return field.getName();
+    }
+
+    public boolean isSameFetchType(FetchType fetchType) {
+        if (field.isAnnotationPresent(OneToMany.class)) {
+            OneToMany annotation = field.getAnnotation(OneToMany.class);
+            return annotation.fetch().equals(fetchType);
+        }
+
+        return false;
+    }
+
+    public void setJoinEntity(Object entity, Object joinEntity) {
+        try {
+            Type genericType = field.getGenericType();
+
+            if (genericType instanceof ParameterizedType) {
+                field.setAccessible(true);
+                List<Object> newList = (List<Object>) field.get(entity);
+
+                if (newList == null) {
+                    newList = new ArrayList<>();
+                }
+                newList.add(joinEntity);
+                field.setAccessible(true);
+                field.set(entity, newList);
+                return;
+            }
+            field.setAccessible(true);
+            field.set(entity, joinEntity);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Object extractValue(Object entity) throws NoSuchFieldException, IllegalAccessException {
+        field.setAccessible(true);
+        return field.get(entity);
     }
 
     private String transformColumnName(String originalName) {
