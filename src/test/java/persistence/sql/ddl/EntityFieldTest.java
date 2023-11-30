@@ -14,17 +14,17 @@ import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class FieldMetadataExtractorTest {
+class EntityFieldTest {
 
     @Test
     @DisplayName("getDefinition() 메소드 테스트")
     public void getDefinitionTest() throws NoSuchFieldException {
         Field id = Person.class.getDeclaredField("id");
 
-        FieldMetadataExtractor fieldMetaDataExtractor = new FieldMetadataExtractor(id);
+        EntityField entityFieldMetaDataExtractor = new EntityField(id);
         Dialect dialect = new H2Dialect();
 
-        assertThat(fieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("id BIGINT AUTO_INCREMENT PRIMARY KEY");
+        assertThat(entityFieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("id BIGINT AUTO_INCREMENT PRIMARY KEY");
     }
 
     @Test
@@ -32,10 +32,10 @@ class FieldMetadataExtractorTest {
     public void getDefinitionTestWithNoOptions() throws NoSuchFieldException {
         Field name = Person.class.getDeclaredField("name");
 
-        FieldMetadataExtractor fieldMetaDataExtractor = new FieldMetadataExtractor(name);
+        EntityField entityFieldMetaDataExtractor = new EntityField(name);
         Dialect dialect = new H2Dialect();
 
-        assertThat(fieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("nick_name VARCHAR");
+        assertThat(entityFieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("nick_name VARCHAR");
     }
 
     @Test
@@ -43,10 +43,10 @@ class FieldMetadataExtractorTest {
     public void getColumnMetaInfosValueTest() throws NoSuchFieldException {
         Field name = ColumnMetaInfosValueTest.class.getDeclaredField("id");
 
-        FieldMetadataExtractor fieldMetaDataExtractor = new FieldMetadataExtractor(name);
+        EntityField entityFieldMetaDataExtractor = new EntityField(name);
         Dialect dialect = new H2Dialect();
 
-        assertThat(fieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL");
+        assertThat(entityFieldMetaDataExtractor.getDefinition(dialect)).isEqualTo("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL");
     }
 
 

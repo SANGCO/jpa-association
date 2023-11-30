@@ -8,12 +8,12 @@ import persistence.sql.ddl.dialect.H2Dialect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class FieldMetadataExtractorsTest {
+class EntityFieldsTest {
 
     @Test
     @DisplayName("Person 엔터티 컬럼 정보 가져오기")
     public void getColumnInfoCollectionTest() {
-        FieldMetadataExtractors fieldMetaDatas = new FieldMetadataExtractors(Person.class);
+        EntityFields fieldMetaDatas = new EntityFields(Person.class);
         Dialect dialect = new H2Dialect();
         
         assertThat(fieldMetaDatas.getDefinition(dialect))

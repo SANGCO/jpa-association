@@ -2,11 +2,11 @@ package persistence.sql.ddl;
 
 import jakarta.persistence.Table;
 
-public class TableMetadataExtractor {
+public class EntityTable {
 
     private final Class<?> type;
 
-    public TableMetadataExtractor(Class<?> type) {
+    public EntityTable(Class<?> type) {
         this.type = type;
     }
 

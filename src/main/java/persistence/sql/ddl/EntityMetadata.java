@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 
 public class EntityMetadata {
 
-    private final TableMetadataExtractor tableMetaDataExtractor;
-    private final FieldMetadataExtractors fieldMetadataExtractors;
+    private final EntityTable entityTableMetaDataExtractor;
+    private final EntityFields entityFields;
     final Class<?> type;
 
     public EntityMetadata(Class<?> type) {
@@ -21,8 +21,8 @@ public class EntityMetadata {
             throw new IllegalArgumentException("No @Entity annotation");
         }
 
-        tableMetaDataExtractor = new TableMetadataExtractor(type);
-        fieldMetadataExtractors = new FieldMetadataExtractors(type);
+        entityTableMetaDataExtractor = new EntityTable(type);
+        entityFields = new EntityFields(type);
         this.type = type;
     }
 
@@ -31,31 +31,31 @@ public class EntityMetadata {
     }
 
     public String getTableName() {
-        return tableMetaDataExtractor.getTableName();
+        return entityTableMetaDataExtractor.getTableName();
     }
 
     public String getColumnInfo(Dialect dialect) {
-        return fieldMetadataExtractors.getDefinition(dialect);
+        return entityFields.getDefinition(dialect);
     }
 
     public String getColumnNames(Object entity) {
-        return fieldMetadataExtractors.getColumnNames(entity);
+        return entityFields.getColumnNames(entity);
     }
 
     public String getColumnNames() {
-        return fieldMetadataExtractors.getColumnNames(getTableName());
+        return entityFields.getColumnNames(getTableName());
     }
 
     public String getValueFrom(Object entity) {
-        return fieldMetadataExtractors.getValueFrom(entity);
+        return entityFields.getValueFrom(entity);
     }
 
     public String getIdColumnName() {
-        return fieldMetadataExtractors.getIdColumnName(getTableName());
+        return entityFields.getIdColumnName(getTableName());
     }
 
     public String getIdColumnValue(Object entity) {
-        return fieldMetadataExtractors.getIdColumnValue(entity);
+        return entityFields.getIdColumnValue(entity);
     }
 
     public <T> T getEntity(ResultSet resultSet) {
@@ -63,7 +63,7 @@ public class EntityMetadata {
             Constructor<T> constructor = (Constructor<T>) type.getDeclaredConstructor();
             constructor.setAccessible(true);
             T instance = constructor.newInstance();
-            fieldMetadataExtractors.setInstanceValue(instance, resultSet);
+            entityFields.setInstanceValue(instance, resultSet);
 
             return instance;
         } catch (Exception e) {
@@ -73,7 +73,7 @@ public class EntityMetadata {
 
     public <T> void setIdToEntity(T entity, long id) {
         try {
-            String idColumnName = fieldMetadataExtractors.getIdColumnName();
+            String idColumnName = entityFields.getIdColumnName();
             Field declaredField = type.getDeclaredField(idColumnName);
             declaredField.setAccessible(true);
             declaredField.set(entity, id);
@@ -83,19 +83,19 @@ public class EntityMetadata {
     }
 
     public String getUpdateClause(Object entity, Object snapshot) {
-        return fieldMetadataExtractors.getUpdateClause(entity, snapshot);
+        return entityFields.getUpdateClause(entity, snapshot);
     }
 
     public boolean hasDifferentValue(Object entity, Object snapshot) {
-        return fieldMetadataExtractors.hasDifferentValue(entity, snapshot);
+        return entityFields.hasDifferentValue(entity, snapshot);
     }
 
     public boolean hasFetchJoin() {
-        return fieldMetadataExtractors.haveFetchJoinAnnotations();
+        return entityFields.haveFetchJoinAnnotations();
     }
 
     public List<EntityMetadata> getJoinTables(FetchType fetchType) {
-        return fieldMetadataExtractors.getJoinTables(fetchType).stream()
+        return entityFields.getJoinTables(fetchType).stream()
                 .map(EntityMetadata::of)
                 .collect(Collectors.toList());
     }
@@ -105,7 +105,7 @@ public class EntityMetadata {
     }
 
     public void setJoinEntity(Object entity, EntityMetadata fetchJoin, Object joinEntity) {
-        fieldMetadataExtractors.setJoinEntity(entity, fetchJoin.getType(), joinEntity);
+        entityFields.setJoinEntity(entity, fetchJoin.getType(), joinEntity);
     }
 
     public Class<?> getType() {
@@ -113,7 +113,7 @@ public class EntityMetadata {
     }
 
     private String getJoinColumnName(Class<?> joinTableType, String tableAlias) {
-        return fieldMetadataExtractors.getJoinColumnName(type, joinTableType, tableAlias);
+        return entityFields.getJoinColumnName(type, joinTableType, tableAlias);
     }
 
 }

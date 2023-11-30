@@ -15,11 +15,11 @@ import java.util.List;
 
 import static utils.JdbcTypeMapper.getJdbcTypeForClass;
 
-public class FieldMetadataExtractor {
+public class EntityField {
 
     private final Field field;
 
-    public FieldMetadataExtractor(Field field) {
+    public EntityField(Field field) {
         this.field = field;
     }
 
